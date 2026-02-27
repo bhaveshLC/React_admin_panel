@@ -12,16 +12,22 @@ import type { Investor } from '@/types/models';
 export function Investors() {
   const [investors, setInvestors] = useState<Investor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [selected, setSelected] = useState<Investor | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<Investor | undefined>();
 
-  const fetchInvestors = async () => {
+  const fetchInvestors = async (targetPage = page) => {
     try {
       setLoading(true);
-      const { data } = await investorsService.list();
-      setInvestors(data);
+      const { data } = await investorsService.list({ page: targetPage });
+      setInvestors(data.data ?? []);
+      setPage(data.page ?? targetPage);
+      setTotalPages(data.totalPages ?? 1);
+      setTotalItems(data.total ?? 0);
     } catch {
       toast.error('Failed to fetch investors');
     } finally {
@@ -30,33 +36,17 @@ export function Investors() {
   };
 
   useEffect(() => {
-    fetchInvestors();
-  }, []);
+    fetchInvestors(page);
+  }, [page]);
 
   const onSubmit = async (values: InvestorFormValues) => {
     try {
       setSubmitLoading(true);
-      const payload = new FormData();
-      payload.append('name', values.name);
-      payload.append('firmName', values.firmName);
-      payload.append('bio', values.bio);
-      payload.append('investmentFocus', values.investmentFocus);
-      payload.append('investmentStage', values.investmentStage);
-      payload.append('investmentRange', values.investmentRange);
-      payload.append('location', values.location);
-      if (values.linkedin) payload.append('linkedin', values.linkedin);
-
-      if (values.profileImageFile) {
-        payload.append('profileImage', values.profileImageFile);
-      } else if (values.profileImage) {
-        payload.append('profileImage', values.profileImage);
-      }
-
       if (selected?._id) {
-        await investorsService.update(selected._id, payload);
+        await investorsService.update(selected._id, values);
         toast.success('Investor updated');
       } else {
-        await investorsService.create(payload);
+        await investorsService.create(values);
         toast.success('Investor created');
       }
       setModalOpen(false);
@@ -125,6 +115,10 @@ export function Investors() {
         columns={columns}
         searchKey="name"
         isLoading={loading}
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPageChange={setPage}
         emptyText="No investors found. Add your first investor."
         actionNode={
           <Button
@@ -139,7 +133,16 @@ export function Investors() {
         }
       />
 
-      <InvestorFormModal open={modalOpen} onOpenChange={setModalOpen} initialData={selected} onSubmit={onSubmit} isLoading={submitLoading} />
+      <InvestorFormModal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setSelected(undefined);
+        }}
+        initialData={selected}
+        onSubmit={onSubmit}
+        isLoading={submitLoading}
+      />
       <DeleteConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(undefined)}

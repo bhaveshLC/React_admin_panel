@@ -26,6 +26,19 @@ const startupSchema = z.object({
 
 export type StartupFormValues = z.infer<typeof startupSchema>;
 
+const STARTUP_DEFAULT_VALUES: StartupFormValues = {
+  logo: '',
+  companyName: '',
+  tagline: '',
+  description: '',
+  industry: '',
+  fundingStage: 'Idea',
+  foundedYear: new Date().getFullYear(),
+  teamSize: 1,
+  location: '',
+  website: '',
+};
+
 interface StartupFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,26 +50,13 @@ interface StartupFormModalProps {
 export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, isLoading }: StartupFormModalProps) {
   const form = useForm<StartupFormValues>({
     resolver: zodResolver(startupSchema),
-    defaultValues: {
-      logo: '',
-      logoFile: undefined,
-      companyName: '',
-      tagline: '',
-      description: '',
-      industry: '',
-      fundingStage: 'Idea',
-      foundedYear: new Date().getFullYear(),
-      teamSize: 1,
-      location: '',
-      website: '',
-    },
+    defaultValues: STARTUP_DEFAULT_VALUES,
   });
 
   useEffect(() => {
     if (initialData) {
       form.reset({
         logo: initialData.logo ?? '',
-        logoFile: undefined,
         companyName: initialData.companyName,
         tagline: initialData.tagline,
         description: initialData.description,
@@ -68,7 +68,7 @@ export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, is
         website: initialData.website ?? '',
       });
     } else {
-      form.reset();
+      form.reset(STARTUP_DEFAULT_VALUES);
     }
   }, [initialData, form, open]);
 
@@ -80,10 +80,7 @@ export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, is
         </DialogHeader>
 
         <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
-          <Field label="Upload Company Logo" error={form.formState.errors.logoFile?.message}>
-            <Input type="file" accept="image/*" onChange={(e) => form.setValue('logoFile', e.target.files?.[0])} />
-            {form.watch('logo') && <p className="text-xs text-muted-foreground">Current: {form.watch('logo')}</p>}
-          </Field>
+          <Field label="Logo URL" error={form.formState.errors.logo?.message}><Input {...form.register('logo')} /></Field>
           <Field label="Company Name" error={form.formState.errors.companyName?.message}><Input {...form.register('companyName')} /></Field>
           <Field label="Tagline" error={form.formState.errors.tagline?.message}><Input {...form.register('tagline')} /></Field>
           <Field label="Industry" error={form.formState.errors.industry?.message}><Input {...form.register('industry')} /></Field>

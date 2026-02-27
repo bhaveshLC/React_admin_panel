@@ -11,8 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Event } from '@/types/models';
 
 const eventSchema = z.object({
-  image: z.string().url('Enter a valid URL').optional().or(z.literal('')),
-  imageFile: z.instanceof(File).optional(),
+  image: z.string().url().optional().or(z.literal('')),
   title: z.string().min(2, 'Title is required'),
   eventDate: z.string().min(1, 'Event date is required'),
   description: z.string().min(10, 'Description is required'),
@@ -37,7 +36,6 @@ export function EventFormModal({ open, onOpenChange, initialData, onSubmit, isLo
     resolver: zodResolver(eventSchema),
     defaultValues: {
       image: '',
-      imageFile: undefined,
       title: '',
       eventDate: '',
       description: '',
@@ -50,7 +48,7 @@ export function EventFormModal({ open, onOpenChange, initialData, onSubmit, isLo
 
   useEffect(() => {
     if (initialData) {
-      form.reset({ ...initialData, imageFile: undefined, eventDate: initialData.eventDate.slice(0, 10) });
+      form.reset({ ...initialData, eventDate: initialData.eventDate.slice(0, 10) });
     } else {
       form.reset();
     }
@@ -64,10 +62,7 @@ export function EventFormModal({ open, onOpenChange, initialData, onSubmit, isLo
         </DialogHeader>
 
         <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
-          <Field label="Upload Event Image" error={form.formState.errors.imageFile?.message}>
-            <Input type="file" accept="image/*" onChange={(e) => form.setValue('imageFile', e.target.files?.[0])} />
-            {form.watch('image') && <p className="text-xs text-muted-foreground">Current: {form.watch('image')}</p>}
-          </Field>
+          <Field label="Image URL" error={form.formState.errors.image?.message}><Input {...form.register('image')} /></Field>
           <Field label="Title" error={form.formState.errors.title?.message}><Input {...form.register('title')} /></Field>
           <Field label="Event Date" error={form.formState.errors.eventDate?.message}><Input type="date" {...form.register('eventDate')} /></Field>
           <Field label="Coordinator Name" error={form.formState.errors.cordinatorName?.message}><Input {...form.register('cordinatorName')} /></Field>

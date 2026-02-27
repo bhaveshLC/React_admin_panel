@@ -22,11 +22,35 @@ interface DataTableProps<TData> {
   isLoading?: boolean;
   emptyText?: string;
   actionNode?: ReactNode;
+<<<<<<< codex/create-production-ready-react-application-subae4
 }
 
 export function DataTable<TData>({ data, columns, searchKey, isLoading, emptyText = 'No records found', actionNode }: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+=======
+  page?: number;
+  totalPages?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
+}
+
+export function DataTable<TData>({
+  data,
+  columns,
+  searchKey,
+  isLoading,
+  emptyText = 'No records found',
+  actionNode,
+  page,
+  totalPages,
+  totalItems,
+  onPageChange,
+}: DataTableProps<TData>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+  const isServerPaginated = typeof page === 'number' && typeof totalPages === 'number' && typeof onPageChange === 'function';
+>>>>>>> main
 
   const filteredData = useMemo(() => {
     if (!searchKey || !globalFilter) return data;

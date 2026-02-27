@@ -12,16 +12,22 @@ import type { Startup } from '@/types/models';
 export function Startups() {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [selected, setSelected] = useState<Startup | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<Startup | undefined>();
 
-  const fetchStartups = async () => {
+  const fetchStartups = async (targetPage = page) => {
     try {
       setLoading(true);
-      const { data } = await startupsService.list();
-      setStartups(data);
+      const { data } = await startupsService.list({ page: targetPage });
+      setStartups(data.data ?? []);
+      setPage(data.page ?? targetPage);
+      setTotalPages(data.totalPages ?? 1);
+      setTotalItems(data.total ?? 0);
     } catch {
       toast.error('Failed to fetch startups');
     } finally {
@@ -30,34 +36,17 @@ export function Startups() {
   };
 
   useEffect(() => {
-    fetchStartups();
-  }, []);
+    fetchStartups(page);
+  }, [page]);
 
   const onSubmit = async (values: StartupFormValues) => {
     try {
       setSubmitLoading(true);
-      const payload = new FormData();
-      payload.append('companyName', values.companyName);
-      payload.append('tagline', values.tagline);
-      payload.append('description', values.description);
-      payload.append('industry', values.industry);
-      payload.append('fundingStage', values.fundingStage);
-      payload.append('foundedYear', String(values.foundedYear));
-      payload.append('teamSize', String(values.teamSize));
-      payload.append('location', values.location);
-      if (values.website) payload.append('website', values.website);
-
-      if (values.logoFile) {
-        payload.append('logo', values.logoFile);
-      } else if (values.logo) {
-        payload.append('logo', values.logo);
-      }
-
       if (selected?._id) {
-        await startupsService.update(selected._id, payload);
+        await startupsService.update(selected._id, values);
         toast.success('Startup updated');
       } else {
-        await startupsService.create(payload);
+        await startupsService.create(values);
         toast.success('Startup created');
       }
       setModalOpen(false);
@@ -125,6 +114,10 @@ export function Startups() {
         columns={columns}
         searchKey="companyName"
         isLoading={loading}
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPageChange={setPage}
         emptyText="No startups found. Add your first startup."
         actionNode={
           <Button
@@ -139,7 +132,16 @@ export function Startups() {
         }
       />
 
-      <StartupFormModal open={modalOpen} onOpenChange={setModalOpen} initialData={selected} onSubmit={onSubmit} isLoading={submitLoading} />
+      <StartupFormModal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setSelected(undefined);
+        }}
+        initialData={selected}
+        onSubmit={onSubmit}
+        isLoading={submitLoading}
+      />
       <DeleteConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(undefined)}

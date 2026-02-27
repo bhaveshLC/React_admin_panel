@@ -12,7 +12,6 @@ import type { Investor } from '@/types/models';
 
 const investorSchema = z.object({
   profileImage: z.string().url('Enter a valid URL').optional().or(z.literal('')),
-  profileImageFile: z.instanceof(File).optional(),
   name: z.string().min(2, 'Name is required'),
   firmName: z.string().min(2, 'Firm name is required'),
   bio: z.string().min(10, 'Bio is required'),
@@ -25,6 +24,18 @@ const investorSchema = z.object({
 
 export type InvestorFormValues = z.infer<typeof investorSchema>;
 
+const INVESTOR_DEFAULT_VALUES: InvestorFormValues = {
+  profileImage: '',
+  name: '',
+  firmName: '',
+  bio: '',
+  investmentFocus: '',
+  investmentStage: 'PreSeed',
+  investmentRange: '',
+  location: '',
+  linkedin: '',
+};
+
 interface InvestorFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,25 +47,13 @@ interface InvestorFormModalProps {
 export function InvestorFormModal({ open, onOpenChange, initialData, onSubmit, isLoading }: InvestorFormModalProps) {
   const form = useForm<InvestorFormValues>({
     resolver: zodResolver(investorSchema),
-    defaultValues: {
-      profileImage: '',
-      profileImageFile: undefined,
-      name: '',
-      firmName: '',
-      bio: '',
-      investmentFocus: '',
-      investmentStage: 'PreSeed',
-      investmentRange: '',
-      location: '',
-      linkedin: '',
-    },
+    defaultValues: INVESTOR_DEFAULT_VALUES,
   });
 
   useEffect(() => {
     if (initialData) {
       form.reset({
         profileImage: initialData.profileImage ?? '',
-        profileImageFile: undefined,
         name: initialData.name,
         firmName: initialData.firmName,
         bio: initialData.bio,
@@ -65,7 +64,7 @@ export function InvestorFormModal({ open, onOpenChange, initialData, onSubmit, i
         linkedin: initialData.linkedin ?? '',
       });
     } else {
-      form.reset();
+      form.reset(INVESTOR_DEFAULT_VALUES);
     }
   }, [initialData, form, open]);
 
@@ -77,10 +76,7 @@ export function InvestorFormModal({ open, onOpenChange, initialData, onSubmit, i
         </DialogHeader>
 
         <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
-          <Field label="Upload Profile Image" error={form.formState.errors.profileImageFile?.message}>
-            <Input type="file" accept="image/*" onChange={(e) => form.setValue('profileImageFile', e.target.files?.[0])} />
-            {form.watch('profileImage') && <p className="text-xs text-muted-foreground">Current: {form.watch('profileImage')}</p>}
-          </Field>
+          <Field label="Profile Image URL" error={form.formState.errors.profileImage?.message}><Input {...form.register('profileImage')} /></Field>
           <Field label="Name" error={form.formState.errors.name?.message}><Input {...form.register('name')} /></Field>
           <Field label="Firm Name" error={form.formState.errors.firmName?.message}><Input {...form.register('firmName')} /></Field>
           <Field label="Investment Focus" error={form.formState.errors.investmentFocus?.message}><Input {...form.register('investmentFocus')} /></Field>
