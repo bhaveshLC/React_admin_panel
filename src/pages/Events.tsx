@@ -12,16 +12,22 @@ import type { Event } from '@/types/models';
 export function Events() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [selected, setSelected] = useState<Event | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<Event | undefined>();
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (targetPage = page) => {
     try {
       setLoading(true);
-      const { data } = await eventsService.list();
-      setEvents(data);
+      const { data } = await eventsService.list({ page: targetPage });
+      setEvents(data.data ?? []);
+      setPage(data.page ?? targetPage);
+      setTotalPages(data.totalPages ?? 1);
+      setTotalItems(data.total ?? 0);
     } catch {
       toast.error('Failed to fetch events');
     } finally {
@@ -30,8 +36,8 @@ export function Events() {
   };
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    fetchEvents(page);
+  }, [page]);
 
   const onSubmit = async (values: EventFormValues) => {
     try {
@@ -109,6 +115,10 @@ export function Events() {
         columns={columns}
         searchKey="title"
         isLoading={loading}
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPageChange={setPage}
         emptyText="No events found. Create your first event."
         actionNode={
           <Button

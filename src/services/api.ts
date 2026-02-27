@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: "http://192.168.0.40:5000/api",
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -33,21 +33,21 @@ export const authService = {
 };
 
 export const eventsService = {
-  list: () => api.get('/events'),
+  list: (params?: { page?: number; limit?: number }) => api.get('/events', { params }),
   create: (payload: unknown) => api.post('/events', payload),
   update: (id: string, payload: unknown) => api.put(`/events/${id}`, payload),
   remove: (id: string) => api.delete(`/events/${id}`),
 };
 
 export const investorsService = {
-  list: () => api.get('/investors'),
+  list: (params?: { page?: number; limit?: number }) => api.get('/investors', { params }),
   create: (payload: unknown) => api.post('/investors', payload),
   update: (id: string, payload: unknown) => api.put(`/investors/${id}`, payload),
   remove: (id: string) => api.delete(`/investors/${id}`),
 };
 
 export const startupsService = {
-  list: () => api.get('/startups'),
+  list: (params?: { page?: number; limit?: number }) => api.get('/startups', { params }),
   create: (payload: unknown) => api.post('/startups', payload),
   update: (id: string, payload: unknown) => api.put(`/startups/${id}`, payload),
   remove: (id: string) => api.delete(`/startups/${id}`),

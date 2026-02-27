@@ -22,11 +22,27 @@ interface DataTableProps<TData> {
   isLoading?: boolean;
   emptyText?: string;
   actionNode?: ReactNode;
+  page?: number;
+  totalPages?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
 }
 
-export function DataTable<TData>({ data, columns, searchKey, isLoading, emptyText = 'No records found', actionNode }: DataTableProps<TData>) {
+export function DataTable<TData>({
+  data,
+  columns,
+  searchKey,
+  isLoading,
+  emptyText = 'No records found',
+  actionNode,
+  page,
+  totalPages,
+  totalItems,
+  onPageChange,
+}: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const isServerPaginated = typeof page === 'number' && typeof totalPages === 'number' && typeof onPageChange === 'function';
 
   const filteredData = useMemo(() => {
     if (!searchKey || !globalFilter) return data;
@@ -96,12 +112,33 @@ export function DataTable<TData>({ data, columns, searchKey, isLoading, emptyTex
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-          Previous
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-          Next
-        </Button>
+        {isServerPaginated ? (
+          <>
+            {typeof totalItems === 'number' && (
+              <span className="mr-2 text-sm text-muted-foreground">
+                Total: {totalItems}
+              </span>
+            )}
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button variant="outline" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1 || isLoading}>
+              Previous
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages || isLoading}>
+              Next
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+              Previous
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+              Next
+            </Button>
+          </>
+        )}
       </div>
     </Card>
   );

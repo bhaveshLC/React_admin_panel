@@ -25,6 +25,19 @@ const startupSchema = z.object({
 
 export type StartupFormValues = z.infer<typeof startupSchema>;
 
+const STARTUP_DEFAULT_VALUES: StartupFormValues = {
+  logo: '',
+  companyName: '',
+  tagline: '',
+  description: '',
+  industry: '',
+  fundingStage: 'Idea',
+  foundedYear: new Date().getFullYear(),
+  teamSize: 1,
+  location: '',
+  website: '',
+};
+
 interface StartupFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,18 +49,7 @@ interface StartupFormModalProps {
 export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, isLoading }: StartupFormModalProps) {
   const form = useForm<StartupFormValues>({
     resolver: zodResolver(startupSchema),
-    defaultValues: {
-      logo: '',
-      companyName: '',
-      tagline: '',
-      description: '',
-      industry: '',
-      fundingStage: 'Idea',
-      foundedYear: new Date().getFullYear(),
-      teamSize: 1,
-      location: '',
-      website: '',
-    },
+    defaultValues: STARTUP_DEFAULT_VALUES,
   });
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, is
         website: initialData.website ?? '',
       });
     } else {
-      form.reset();
+      form.reset(STARTUP_DEFAULT_VALUES);
     }
   }, [initialData, form, open]);
 

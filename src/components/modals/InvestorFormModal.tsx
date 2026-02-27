@@ -24,6 +24,18 @@ const investorSchema = z.object({
 
 export type InvestorFormValues = z.infer<typeof investorSchema>;
 
+const INVESTOR_DEFAULT_VALUES: InvestorFormValues = {
+  profileImage: '',
+  name: '',
+  firmName: '',
+  bio: '',
+  investmentFocus: '',
+  investmentStage: 'PreSeed',
+  investmentRange: '',
+  location: '',
+  linkedin: '',
+};
+
 interface InvestorFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,17 +47,7 @@ interface InvestorFormModalProps {
 export function InvestorFormModal({ open, onOpenChange, initialData, onSubmit, isLoading }: InvestorFormModalProps) {
   const form = useForm<InvestorFormValues>({
     resolver: zodResolver(investorSchema),
-    defaultValues: {
-      profileImage: '',
-      name: '',
-      firmName: '',
-      bio: '',
-      investmentFocus: '',
-      investmentStage: 'PreSeed',
-      investmentRange: '',
-      location: '',
-      linkedin: '',
-    },
+    defaultValues: INVESTOR_DEFAULT_VALUES,
   });
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export function InvestorFormModal({ open, onOpenChange, initialData, onSubmit, i
         linkedin: initialData.linkedin ?? '',
       });
     } else {
-      form.reset();
+      form.reset(INVESTOR_DEFAULT_VALUES);
     }
   }, [initialData, form, open]);
 
