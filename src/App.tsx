@@ -10,12 +10,12 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route element={<PrivateRoute />}>
-        <Route element={<DashboardLayout />}>
-          <Route path="/events" element={<Events />} />
-          <Route path="/investors" element={<Investors />} />
-          <Route path="/startups" element={<Startups />} />
-        </Route>
+      {/* <Route element={<PrivateRoute />}> */}
+      <Route element={<DashboardLayout />}>
+        <Route path="/events" element={<Events />} />
+        <Route path="/investors" element={<Investors />} />
+        <Route path="/startups" element={<Startups />} />
+        {/* </Route> */}
       </Route>
       <Route path="*" element={<Navigate to="/events" replace />} />
     </Routes>

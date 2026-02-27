@@ -21,7 +21,7 @@ export function Events() {
     try {
       setLoading(true);
       const { data } = await eventsService.list();
-      setEvents(data);
+      setEvents(data.data);
     } catch {
       toast.error('Failed to fetch events');
     } finally {
@@ -123,7 +123,16 @@ export function Events() {
         }
       />
 
-      <EventFormModal open={modalOpen} onOpenChange={setModalOpen} initialData={selected} onSubmit={onSubmit} isLoading={submitLoading} />
+      <EventFormModal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setSelected(undefined);
+        }}
+        initialData={selected}
+        onSubmit={onSubmit}
+        isLoading={submitLoading}
+      />
       <DeleteConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(undefined)}

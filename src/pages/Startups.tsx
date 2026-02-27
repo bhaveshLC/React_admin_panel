@@ -15,7 +15,7 @@ export function Startups() {
     (async () => {
       try {
         const res = await startupsService.list();
-        setData(res.data);
+        setData(res.data.data);
       } catch {
         toast.error('Failed to fetch startups');
       } finally {

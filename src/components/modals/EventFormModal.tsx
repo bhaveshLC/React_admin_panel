@@ -23,6 +23,17 @@ const eventSchema = z.object({
 
 export type EventFormValues = z.infer<typeof eventSchema>;
 
+const defaultFormValues: EventFormValues = {
+  image: '',
+  title: '',
+  eventDate: '',
+  description: '',
+  cordinatorName: '',
+  cordinatorMobile: '',
+  eventType: 'Participating',
+  eventStatus: 'Ongoing',
+};
+
 interface EventFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,23 +45,16 @@ interface EventFormModalProps {
 export function EventFormModal({ open, onOpenChange, initialData, onSubmit, isLoading }: EventFormModalProps) {
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
-    defaultValues: {
-      image: '',
-      title: '',
-      eventDate: '',
-      description: '',
-      cordinatorName: '',
-      cordinatorMobile: '',
-      eventType: 'Participating',
-      eventStatus: 'Ongoing',
-    },
+    defaultValues: defaultFormValues,
   });
 
   useEffect(() => {
+    if (!open) return;
+
     if (initialData) {
       form.reset({ ...initialData, eventDate: initialData.eventDate.slice(0, 10) });
     } else {
-      form.reset();
+      form.reset(defaultFormValues);
     }
   }, [initialData, form, open]);
 

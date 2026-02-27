@@ -15,7 +15,7 @@ export function Investors() {
     (async () => {
       try {
         const res = await investorsService.list();
-        setData(res.data);
+        setData(res.data.data);
       } catch {
         toast.error('Failed to fetch investors');
       } finally {
