@@ -21,7 +21,7 @@ export function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <aside className={cn('border-r bg-white p-4 transition-all duration-300', collapsed ? 'w-20' : 'w-64')}>
+      <aside className={cn('border-r bg-gray-100 p-4 transition-all duration-300', collapsed ? 'w-20' : 'w-64')}>
         <Button variant="ghost" size="icon" onClick={() => setCollapsed((prev) => !prev)} className="mb-6">
           <Menu className="h-5 w-5" />
         </Button>

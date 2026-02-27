@@ -11,14 +11,17 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Startup } from '@/types/models';
 
 const startupSchema = z.object({
-  logo: z.string().url('Enter a valid URL').optional().or(z.literal('')),
-  logoFile: z.instanceof(File).optional(),
+  logoFile: z.instanceof(File).optional().nullable(),
   companyName: z.string().min(2, 'Company name is required'),
   tagline: z.string().min(2, 'Tagline is required'),
   description: z.string().min(10, 'Description is required'),
   industry: z.string().min(2, 'Industry is required'),
   fundingStage: z.enum(['Idea', 'PreSeed', 'Seed', 'SeriesA', 'SeriesB', 'Bootstrapped']),
-  foundedYear: z.coerce.number().int().min(1900, 'Enter valid year').max(new Date().getFullYear(), 'Year cannot be in future'),
+  foundedYear: z.coerce
+    .number()
+    .int()
+    .min(1900, 'Enter valid year')
+    .max(new Date().getFullYear(), 'Year cannot be in future'),
   teamSize: z.coerce.number().int().min(1, 'Team size must be at least 1'),
   location: z.string().min(2, 'Location is required'),
   website: z.string().url('Enter a valid URL').optional().or(z.literal('')),
@@ -27,7 +30,7 @@ const startupSchema = z.object({
 export type StartupFormValues = z.infer<typeof startupSchema>;
 
 const STARTUP_DEFAULT_VALUES: StartupFormValues = {
-  logo: '',
+  logoFile: null,
   companyName: '',
   tagline: '',
   description: '',
@@ -47,7 +50,13 @@ interface StartupFormModalProps {
   isLoading?: boolean;
 }
 
-export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, isLoading }: StartupFormModalProps) {
+export function StartupFormModal({
+  open,
+  onOpenChange,
+  initialData,
+  onSubmit,
+  isLoading,
+}: StartupFormModalProps) {
   const form = useForm<StartupFormValues>({
     resolver: zodResolver(startupSchema),
     defaultValues: STARTUP_DEFAULT_VALUES,
@@ -56,7 +65,7 @@ export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, is
   useEffect(() => {
     if (initialData) {
       form.reset({
-        logo: initialData.logo ?? '',
+        logoFile: null, // can't pre-fill a File input — existing logo shown separately
         companyName: initialData.companyName,
         tagline: initialData.tagline,
         description: initialData.description,
@@ -79,15 +88,50 @@ export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, is
           <DialogTitle>{initialData ? 'Edit Startup' : 'Add Startup'}</DialogTitle>
         </DialogHeader>
 
-        <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
-          <Field label="Logo URL" error={form.formState.errors.logo?.message}><Input {...form.register('logo')} /></Field>
-          <Field label="Company Name" error={form.formState.errors.companyName?.message}><Input {...form.register('companyName')} /></Field>
-          <Field label="Tagline" error={form.formState.errors.tagline?.message}><Input {...form.register('tagline')} /></Field>
-          <Field label="Industry" error={form.formState.errors.industry?.message}><Input {...form.register('industry')} /></Field>
+        <form
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
+          {/* Logo upload — shows existing logo preview when editing */}
+          <Field label="Logo Image (optional)" error={form.formState.errors.logoFile?.message}>
+            {initialData?.logo && !form.watch('logoFile') && (
+              <div className="mb-1 flex items-center gap-2">
+                <img
+                  src={initialData.logo}
+                  alt="Current logo"
+                  className="h-10 w-10 rounded object-cover border"
+                />
+                <span className="text-xs text-muted-foreground">Current logo</span>
+              </div>
+            )}
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                form.setValue('logoFile', file);
+              }}
+            />
+          </Field>
+
+          <Field label="Company Name" error={form.formState.errors.companyName?.message}>
+            <Input {...form.register('companyName')} />
+          </Field>
+
+          <Field label="Tagline" error={form.formState.errors.tagline?.message}>
+            <Input {...form.register('tagline')} />
+          </Field>
+
+          <Field label="Industry" error={form.formState.errors.industry?.message}>
+            <Input {...form.register('industry')} />
+          </Field>
+
           <Field label="Funding Stage" error={form.formState.errors.fundingStage?.message}>
             <Select
               value={form.watch('fundingStage')}
-              onChange={(value) => form.setValue('fundingStage', value as StartupFormValues['fundingStage'])}
+              onChange={(value) =>
+                form.setValue('fundingStage', value as StartupFormValues['fundingStage'])
+              }
               options={[
                 { value: 'Idea', label: 'Idea' },
                 { value: 'PreSeed', label: 'Pre Seed' },
@@ -98,16 +142,33 @@ export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, is
               ]}
             />
           </Field>
-          <Field label="Founded Year" error={form.formState.errors.foundedYear?.message}><Input type="number" {...form.register('foundedYear')} /></Field>
-          <Field label="Team Size" error={form.formState.errors.teamSize?.message}><Input type="number" {...form.register('teamSize')} /></Field>
-          <Field label="Location" error={form.formState.errors.location?.message}><Input {...form.register('location')} /></Field>
-          <Field label="Website" error={form.formState.errors.website?.message}><Input {...form.register('website')} /></Field>
+
+          <Field label="Founded Year" error={form.formState.errors.foundedYear?.message}>
+            <Input type="number" {...form.register('foundedYear')} />
+          </Field>
+
+          <Field label="Team Size" error={form.formState.errors.teamSize?.message}>
+            <Input type="number" {...form.register('teamSize')} />
+          </Field>
+
+          <Field label="Location" error={form.formState.errors.location?.message}>
+            <Input {...form.register('location')} />
+          </Field>
+
+          <Field label="Website" error={form.formState.errors.website?.message}>
+            <Input {...form.register('website')} />
+          </Field>
+
           <div className="md:col-span-2">
-            <Field label="Description" error={form.formState.errors.description?.message}><Textarea {...form.register('description')} /></Field>
+            <Field label="Description" error={form.formState.errors.description?.message}>
+              <Textarea {...form.register('description')} />
+            </Field>
           </div>
 
           <div className="md:col-span-2 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {initialData ? 'Update Startup' : 'Create Startup'}
@@ -119,7 +180,15 @@ export function StartupFormModal({ open, onOpenChange, initialData, onSubmit, is
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: ReactNode;
+}) {
   return (
     <label className="block space-y-1 text-sm">
       <span className="font-medium">{label}</span>

@@ -1,76 +1,37 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { useMemo } from 'react';
 import { DeleteConfirmDialog } from '@/components/modals/DeleteConfirmDialog';
 import { InvestorFormModal, type InvestorFormValues } from '@/components/modals/InvestorFormModal';
 import { DataTable } from '@/components/tables/DataTable';
 import { Button } from '@/components/ui/button';
 import { investorsService } from '@/services/api';
 import type { Investor } from '@/types/models';
+import { useCrudPage } from '@/hooks/UseCrudPage';
 
 export function Investors() {
-  const [investors, setInvestors] = useState<Investor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [selected, setSelected] = useState<Investor | undefined>();
-  const [deleteTarget, setDeleteTarget] = useState<Investor | undefined>();
-
-  const fetchInvestors = async (targetPage = page) => {
-    try {
-      setLoading(true);
-      const { data } = await investorsService.list({ page: targetPage });
-      setInvestors(data.data ?? []);
-      setPage(data.page ?? targetPage);
-      setTotalPages(data.totalPages ?? 1);
-      setTotalItems(data.total ?? 0);
-    } catch {
-      toast.error('Failed to fetch investors');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInvestors(page);
-  }, [page]);
-
-  const onSubmit = async (values: InvestorFormValues) => {
-    try {
-      setSubmitLoading(true);
-      if (selected?._id) {
-        await investorsService.update(selected._id, values);
-        toast.success('Investor updated');
-      } else {
-        await investorsService.create(values);
-        toast.success('Investor created');
-      }
-      setModalOpen(false);
-      setSelected(undefined);
-      await fetchInvestors();
-    } catch {
-      toast.error('Failed to save investor');
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
-  const onDelete = async () => {
-    if (!deleteTarget?._id) return;
-    try {
-      await investorsService.remove(deleteTarget._id);
-      toast.success('Investor deleted');
-      await fetchInvestors();
-    } catch {
-      toast.error('Failed to delete investor');
-    } finally {
-      setDeleteTarget(undefined);
-    }
-  };
+  const {
+    items: investors,
+    loading,
+    submitLoading,
+    page,
+    totalPages,
+    totalItems,
+    modalOpen,
+    selected,
+    deleteTarget,
+    setPage,
+    setDeleteTarget,
+    handleSubmit,
+    handleDelete,
+    openCreate,
+    openEdit,
+    closeModal,
+  } = useCrudPage<Investor>({
+    service: investorsService as never,
+    entityName: 'Investor',
+    getId: (inv) => inv._id,
+  });
 
   const columns = useMemo<ColumnDef<Investor>[]>(
     () => [
@@ -85,14 +46,7 @@ export function Investors() {
         header: 'Actions',
         cell: ({ row }) => (
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSelected(row.original);
-                setModalOpen(true);
-              }}
-            >
+            <Button size="sm" variant="outline" onClick={() => openEdit(row.original)}>
               <Pencil className="h-3.5 w-3.5" />
               Edit
             </Button>
@@ -104,7 +58,7 @@ export function Investors() {
         ),
       },
     ],
-    [],
+    [openEdit, setDeleteTarget],
   );
 
   return (
@@ -121,12 +75,7 @@ export function Investors() {
         onPageChange={setPage}
         emptyText="No investors found. Add your first investor."
         actionNode={
-          <Button
-            onClick={() => {
-              setSelected(undefined);
-              setModalOpen(true);
-            }}
-          >
+          <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
             Add Investor
           </Button>
@@ -135,20 +84,17 @@ export function Investors() {
 
       <InvestorFormModal
         open={modalOpen}
-        onOpenChange={(open) => {
-          setModalOpen(open);
-          if (!open) setSelected(undefined);
-        }}
+        onOpenChange={closeModal}
         initialData={selected}
-        onSubmit={onSubmit}
+        onSubmit={(v: InvestorFormValues) => handleSubmit(v)}
         isLoading={submitLoading}
       />
       <DeleteConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(undefined)}
         title="Delete investor"
-        description={`Delete ${deleteTarget?.name ?? 'this investor'}? This cannot be undone.`}
-        onConfirm={onDelete}
+        description={`Delete "${deleteTarget?.name ?? 'this investor'}"? This cannot be undone.`}
+        onConfirm={handleDelete}
       />
     </section>
   );
