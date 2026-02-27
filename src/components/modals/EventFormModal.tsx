@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Event } from '@/types/models';
 
 const eventSchema = z.object({
-  image: z.string().url().optional().or(z.literal('')),
   title: z.string().min(2, 'Title is required'),
   eventDate: z.string().min(1, 'Event date is required'),
   description: z.string().min(10, 'Description is required'),
@@ -21,7 +20,9 @@ const eventSchema = z.object({
   eventStatus: z.enum(['Past', 'Ongoing']),
 });
 
-export type EventFormValues = z.infer<typeof eventSchema>;
+export type EventFormValues = z.infer<typeof eventSchema> & {
+  imageFile?: File | null;
+};
 
 interface EventFormModalProps {
   open: boolean;
@@ -35,7 +36,6 @@ export function EventFormModal({ open, onOpenChange, initialData, onSubmit, isLo
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      image: '',
       title: '',
       eventDate: '',
       description: '',
@@ -48,9 +48,27 @@ export function EventFormModal({ open, onOpenChange, initialData, onSubmit, isLo
 
   useEffect(() => {
     if (initialData) {
-      form.reset({ ...initialData, eventDate: initialData.eventDate.slice(0, 10) });
+      form.reset({
+        title: initialData.title,
+        eventDate: initialData.eventDate.slice(0, 10),
+        description: initialData.description,
+        cordinatorName: initialData.cordinatorName,
+        cordinatorMobile: initialData.cordinatorMobile,
+        eventType: initialData.eventType,
+        eventStatus: initialData.eventStatus,
+        imageFile: null,
+      });
     } else {
-      form.reset();
+      form.reset({
+        title: '',
+        eventDate: '',
+        description: '',
+        cordinatorName: '',
+        cordinatorMobile: '',
+        eventType: 'Participating',
+        eventStatus: 'Ongoing',
+        imageFile: null,
+      });
     }
   }, [initialData, form, open]);
 
@@ -62,7 +80,16 @@ export function EventFormModal({ open, onOpenChange, initialData, onSubmit, isLo
         </DialogHeader>
 
         <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
-          <Field label="Image URL" error={form.formState.errors.image?.message}><Input {...form.register('image')} /></Field>
+          <Field label="Event Image (optional)">
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                form.setValue('imageFile', file);
+              }}
+            />
+          </Field>
           <Field label="Title" error={form.formState.errors.title?.message}><Input {...form.register('title')} /></Field>
           <Field label="Event Date" error={form.formState.errors.eventDate?.message}><Input type="date" {...form.register('eventDate')} /></Field>
           <Field label="Coordinator Name" error={form.formState.errors.cordinatorName?.message}><Input {...form.register('cordinatorName')} /></Field>
