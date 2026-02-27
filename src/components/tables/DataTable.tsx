@@ -22,6 +22,13 @@ interface DataTableProps<TData> {
   isLoading?: boolean;
   emptyText?: string;
   actionNode?: ReactNode;
+<<<<<<< codex/create-production-ready-react-application-subae4
+}
+
+export function DataTable<TData>({ data, columns, searchKey, isLoading, emptyText = 'No records found', actionNode }: DataTableProps<TData>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+=======
   page?: number;
   totalPages?: number;
   totalItems?: number;
@@ -43,6 +50,7 @@ export function DataTable<TData>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const isServerPaginated = typeof page === 'number' && typeof totalPages === 'number' && typeof onPageChange === 'function';
+>>>>>>> main
 
   const filteredData = useMemo(() => {
     if (!searchKey || !globalFilter) return data;
@@ -112,33 +120,12 @@ export function DataTable<TData>({
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        {isServerPaginated ? (
-          <>
-            {typeof totalItems === 'number' && (
-              <span className="mr-2 text-sm text-muted-foreground">
-                Total: {totalItems}
-              </span>
-            )}
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <Button variant="outline" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1 || isLoading}>
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages || isLoading}>
-              Next
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-              Next
-            </Button>
-          </>
-        )}
+        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+          Previous
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+          Next
+        </Button>
       </div>
     </Card>
   );

@@ -42,11 +42,25 @@ export function Events() {
   const onSubmit = async (values: EventFormValues) => {
     try {
       setSubmitLoading(true);
+      const payload = new FormData();
+      payload.append('title', values.title);
+      payload.append('eventDate', values.eventDate);
+      payload.append('description', values.description);
+      payload.append('cordinatorName', values.cordinatorName);
+      payload.append('cordinatorMobile', values.cordinatorMobile);
+      payload.append('eventType', values.eventType);
+      payload.append('eventStatus', values.eventStatus);
+      if (values.imageFile) {
+        payload.append('image', values.imageFile);
+      } else if (values.image) {
+        payload.append('image', values.image);
+      }
+
       if (selected?._id) {
-        await eventsService.update(selected._id, values);
+        await eventsService.update(selected._id, payload);
         toast.success('Event updated');
       } else {
-        await eventsService.create(values);
+        await eventsService.create(payload);
         toast.success('Event created');
       }
       setModalOpen(false);

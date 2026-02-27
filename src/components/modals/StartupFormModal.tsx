@@ -12,6 +12,7 @@ import type { Startup } from '@/types/models';
 
 const startupSchema = z.object({
   logo: z.string().url('Enter a valid URL').optional().or(z.literal('')),
+  logoFile: z.instanceof(File).optional(),
   companyName: z.string().min(2, 'Company name is required'),
   tagline: z.string().min(2, 'Tagline is required'),
   description: z.string().min(10, 'Description is required'),
