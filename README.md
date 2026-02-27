@@ -1,6 +1,6 @@
 # React Admin Panel (Vite + TypeScript)
 
-Production-ready admin panel scaffold with authentication, protected routes, reusable table layer, and complete CRUD modules for **Events, Investors, and Startups**.
+Production-ready admin panel scaffold with authentication, protected routes, reusable table layer, and complete **Events** CRUD module.
 
 ## 1) Project Setup Steps
 
@@ -54,9 +54,7 @@ src/
  │    │    └── DataTable.tsx
  │    └── modals/
  │         ├── DeleteConfirmDialog.tsx
- │         ├── EventFormModal.tsx
- │         ├── InvestorFormModal.tsx
- │         └── StartupFormModal.tsx
+ │         └── EventFormModal.tsx
  ├── pages/
  │    ├── Login.tsx
  │    ├── Events.tsx
@@ -95,22 +93,28 @@ src/
   - JWT interceptor
   - 401 global redirect to login
 
-## 5) Full Implementations Included
+## 5) Full Example Included
 
-- **Events module** in `pages/Events.tsx` with create/edit/delete + table actions.
-- **Investors module** in `pages/Investors.tsx` with create/edit/delete + table actions.
-- **Startups module** in `pages/Startups.tsx` with create/edit/delete + table actions.
-- Reusable model-specific modal forms in `components/modals/` with RHF + Zod and loading/error handling.
+- **Events module is fully implemented** in `pages/Events.tsx`:
+  - Fetch list
+  - Create event modal
+  - Edit event modal with prefilled data
+  - Delete confirmation + delete API call
+  - Success/error toasts
 
-## 6) Reusable Generic Pattern for New Modules
+## 6) Reusable Generic Pattern for Investors and Startups
 
-Use the same pattern implemented by all three current modules:
+Use the same pattern as Events:
 
-1. Build a Zod schema + RHF modal component for the entity.
-2. Define TanStack columns and include an `actions` cell.
-3. Reuse `DataTable` and `DeleteConfirmDialog`.
-4. Manage `modalOpen`, `selected`, and `deleteTarget` local states.
-5. Wire list/create/update/remove methods from `services/api.ts`.
+1. Create a Zod schema + RHF modal component for that model.
+2. Create a columns config array for the model in its page.
+3. Reuse:
+   - `DataTable`
+   - `DeleteConfirmDialog`
+   - same `modalOpen`, `selected`, `deleteTarget` state pattern
+4. Wire CRUD services from `services/api.ts`.
+
+`Investors.tsx` and `Startups.tsx` already show the table/fetch/search wiring and are ready to be extended with full modal CRUD.
 
 ## 7) Architecture Notes
 

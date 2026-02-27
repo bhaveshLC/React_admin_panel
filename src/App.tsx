@@ -16,7 +16,6 @@ export default function App() {
           <Route path="/investors" element={<Investors />} />
           <Route path="/startups" element={<Startups />} />
         </Route>
-      </Route>
       <Route path="*" element={<Navigate to="/events" replace />} />
     </Routes>
   );
