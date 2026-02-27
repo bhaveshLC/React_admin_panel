@@ -52,8 +52,6 @@ export function Events() {
       payload.append('eventStatus', values.eventStatus);
       if (values.imageFile) {
         payload.append('image', values.imageFile);
-      } else if (values.image) {
-        payload.append('image', values.image);
       }
 
       if (selected?._id) {
