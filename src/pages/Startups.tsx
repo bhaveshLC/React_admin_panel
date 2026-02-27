@@ -1,75 +1,80 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { DeleteConfirmDialog } from '@/components/modals/DeleteConfirmDialog';
 import { StartupFormModal, type StartupFormValues } from '@/components/modals/StartupFormModal';
 import { DataTable } from '@/components/tables/DataTable';
 import { Button } from '@/components/ui/button';
 import { startupsService } from '@/services/api';
 import type { Startup } from '@/types/models';
-import { useCrudPage } from '@/hooks/UseCrudPage';
-
-/** Build the multipart FormData payload expected by the startups API */
-function buildStartupPayload(values: StartupFormValues): FormData {
-  const payload = new FormData();
-  payload.append('companyName', values.companyName);
-  payload.append('tagline', values.tagline);
-  payload.append('description', values.description);
-  payload.append('industry', values.industry);
-  payload.append('fundingStage', values.fundingStage);
-  payload.append('foundedYear', String(values.foundedYear));
-  payload.append('teamSize', String(values.teamSize));
-  payload.append('location', values.location);
-  if (values.website) payload.append('website', values.website);
-  if (values.logoFile) payload.append('logo', values.logoFile);
-  return payload;
-}
 
 export function Startups() {
-  const {
-    items: startups,
-    loading,
-    submitLoading,
-    page,
-    totalPages,
-    totalItems,
-    modalOpen,
-    selected,
-    deleteTarget,
-    setPage,
-    setDeleteTarget,
-    handleSubmit,
-    handleDelete,
-    openCreate,
-    openEdit,
-    closeModal,
-  } = useCrudPage<Startup>({
-    service: startupsService as never,
-    entityName: 'Startup',
-    getId: (s) => s._id,
-  });
+  const [startups, setStartups] = useState<Startup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [selected, setSelected] = useState<Startup | undefined>();
+  const [deleteTarget, setDeleteTarget] = useState<Startup | undefined>();
 
-  const onSubmit = (values: StartupFormValues) =>
-    handleSubmit(values, (v) => buildStartupPayload(v as StartupFormValues));
+  const fetchStartups = async (targetPage = page) => {
+    try {
+      setLoading(true);
+      const { data } = await startupsService.list({ page: targetPage });
+      setStartups(data.data ?? []);
+      setPage(data.page ?? targetPage);
+      setTotalPages(data.totalPages ?? 1);
+      setTotalItems(data.total ?? 0);
+    } catch {
+      toast.error('Failed to fetch startups');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStartups(page);
+  }, [page]);
+
+  const onSubmit = async (values: StartupFormValues) => {
+    try {
+      setSubmitLoading(true);
+      if (selected?._id) {
+        await startupsService.update(selected._id, values);
+        toast.success('Startup updated');
+      } else {
+        await startupsService.create(values);
+        toast.success('Startup created');
+      }
+      setModalOpen(false);
+      setSelected(undefined);
+      await fetchStartups();
+    } catch {
+      toast.error('Failed to save startup');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!deleteTarget?._id) return;
+    try {
+      await startupsService.remove(deleteTarget._id);
+      toast.success('Startup deleted');
+      await fetchStartups();
+    } catch {
+      toast.error('Failed to delete startup');
+    } finally {
+      setDeleteTarget(undefined);
+    }
+  };
 
   const columns = useMemo<ColumnDef<Startup>[]>(
     () => [
-      {
-        accessorKey: 'companyName',
-        header: 'Company',
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            {row.original.logo && (
-              <img
-                src={row.original.logo}
-                alt={row.original.companyName}
-                className="h-7 w-7 rounded object-cover border shrink-0"
-              />
-            )}
-            <span>{row.original.companyName}</span>
-          </div>
-        ),
-      },
+      { accessorKey: 'companyName', header: 'Company' },
       { accessorKey: 'industry', header: 'Industry' },
       { accessorKey: 'fundingStage', header: 'Stage' },
       { accessorKey: 'teamSize', header: 'Team Size' },
@@ -79,7 +84,14 @@ export function Startups() {
         header: 'Actions',
         cell: ({ row }) => (
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => openEdit(row.original)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setSelected(row.original);
+                setModalOpen(true);
+              }}
+            >
               <Pencil className="h-3.5 w-3.5" />
               Edit
             </Button>
@@ -91,7 +103,7 @@ export function Startups() {
         ),
       },
     ],
-    [openEdit, setDeleteTarget],
+    [],
   );
 
   return (
@@ -108,7 +120,12 @@ export function Startups() {
         onPageChange={setPage}
         emptyText="No startups found. Add your first startup."
         actionNode={
-          <Button onClick={openCreate}>
+          <Button
+            onClick={() => {
+              setSelected(undefined);
+              setModalOpen(true);
+            }}
+          >
             <Plus className="h-4 w-4" />
             Add Startup
           </Button>
@@ -117,7 +134,10 @@ export function Startups() {
 
       <StartupFormModal
         open={modalOpen}
-        onOpenChange={closeModal}
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setSelected(undefined);
+        }}
         initialData={selected}
         onSubmit={onSubmit}
         isLoading={submitLoading}
@@ -126,8 +146,8 @@ export function Startups() {
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(undefined)}
         title="Delete startup"
-        description={`Delete "${deleteTarget?.companyName ?? 'this startup'}"? This cannot be undone.`}
-        onConfirm={handleDelete}
+        description={`Delete ${deleteTarget?.companyName ?? 'this startup'}? This cannot be undone.`}
+        onConfirm={onDelete}
       />
     </section>
   );
