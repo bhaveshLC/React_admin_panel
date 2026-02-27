@@ -13,7 +13,7 @@ import type { Event } from '@/types/models';
 const eventSchema = z.object({
   title: z.string().min(2, 'Title is required'),
   eventDate: z.string().min(1, 'Event date is required'),
-  description: z.string().min(10, 'Description is required'),
+  description: z.string().min(2, 'Description is required'),
   cordinatorName: z.string().min(2, 'Coordinator name is required'),
   cordinatorMobile: z.string().regex(/^\d{10}$/, 'Enter valid 10-digit mobile number'),
   eventType: z.enum(['Participating', 'NonParticipating']),

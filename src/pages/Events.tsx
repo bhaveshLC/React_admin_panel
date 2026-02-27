@@ -55,6 +55,7 @@ export function Events() {
       }
 
       if (selected?._id) {
+        console.log(payload)
         await eventsService.update(selected._id, payload);
         toast.success('Event updated');
       } else {

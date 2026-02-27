@@ -22,18 +22,12 @@ interface DataTableProps<TData> {
   isLoading?: boolean;
   emptyText?: string;
   actionNode?: ReactNode;
-<<<<<<< codex/create-production-ready-react-application-subae4
-}
-
-export function DataTable<TData>({ data, columns, searchKey, isLoading, emptyText = 'No records found', actionNode }: DataTableProps<TData>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
-=======
   page?: number;
   totalPages?: number;
   totalItems?: number;
   onPageChange?: (page: number) => void;
 }
+
 
 export function DataTable<TData>({
   data,
@@ -50,7 +44,6 @@ export function DataTable<TData>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const isServerPaginated = typeof page === 'number' && typeof totalPages === 'number' && typeof onPageChange === 'function';
->>>>>>> main
 
   const filteredData = useMemo(() => {
     if (!searchKey || !globalFilter) return data;
@@ -94,14 +87,14 @@ export function DataTable<TData>({
           <tbody>
             {isLoading
               ? Array.from({ length: 5 }).map((_, index) => (
-                  <tr key={index} className="border-t">
-                    <td colSpan={columns.length} className="px-4 py-3">
-                      <Skeleton className="h-8 w-full" />
-                    </td>
-                  </tr>
-                ))
+                <tr key={index} className="border-t">
+                  <td colSpan={columns.length} className="px-4 py-3">
+                    <Skeleton className="h-8 w-full" />
+                  </td>
+                </tr>
+              ))
               : table.getRowModel().rows.length > 0
-              ? table.getRowModel().rows.map((row) => (
+                ? table.getRowModel().rows.map((row) => (
                   <tr key={row.id} className="border-t">
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-4 py-3 align-top">
@@ -110,11 +103,11 @@ export function DataTable<TData>({
                     ))}
                   </tr>
                 ))
-              : (
-                <tr>
-                  <td colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">{emptyText}</td>
-                </tr>
-              )}
+                : (
+                  <tr>
+                    <td colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">{emptyText}</td>
+                  </tr>
+                )}
           </tbody>
         </table>
       </div>
